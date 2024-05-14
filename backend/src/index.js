@@ -23,7 +23,11 @@ const PORT = 3001
 
 // Get all lists
 app.get('/api/lists', async (req, res) => {
-  res.json(todoLists)
+  try {
+    res.json(todoLists)
+  } catch (error) {
+    res.status(500).send('Something went wrong while getting todo lists')
+  }
 })
 
 // Save a list
