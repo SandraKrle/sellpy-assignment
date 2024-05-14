@@ -6,7 +6,7 @@ const MainAppBar = () => {
   return (
     <AppBar position='static' color='primary'>
       <Toolbar>
-        <Typography variant='h6' color='inherit'>
+        <Typography variant='h6' component='h1' color='inherit'>
           Things to do
         </Typography>
       </Toolbar>

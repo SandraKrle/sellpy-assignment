@@ -1,14 +1,44 @@
 import React, { useState } from 'react'
-import { TextField, Card, CardContent, CardActions, Button, Typography } from '@mui/material'
-import DeleteIcon from '@mui/icons-material/Delete'
+import { Card, CardContent, CardActions, Button, Typography, Snackbar } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
+import { TodoItem } from './TodoItem'
+import { deleteTodoRequest } from '../../lib/api'
 
 export const TodoListForm = ({ todoList, saveTodoList }) => {
   const [todos, setTodos] = useState(todoList.todos)
+  const [open, setOpen] = React.useState(false)
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
     saveTodoList(todoList.id, { todos })
+    setOpen(true)
+  }
+
+  function editTodo(e, todoIndex) {
+    const editedTodoList = todos.map((todo, index) => {
+      if (todoIndex === index) {
+        return { ...todo, task: e.target.value }
+      }
+      return todo
+    })
+    setTodos(editedTodoList)
+  }
+
+  function toggleTodoCompleted(todoIndex) {
+    const updatedTodos = todos.map((todo, index) => {
+      if (todoIndex === index) {
+        return { ...todo, completed: !todo.completed }
+      }
+      return todo
+    })
+
+    setTodos(updatedTodos)
+  }
+
+  const deleteTodo = async (todoIndex) => {
+    deleteTodoRequest(todoIndex, todoList.id, todos)
+    const remainingTodos = todos.filter((todo, index) => todoIndex !== index)
+    setTodos(remainingTodos)
   }
 
   return (
@@ -19,46 +49,22 @@ export const TodoListForm = ({ todoList, saveTodoList }) => {
           onSubmit={handleSubmit}
           style={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}
         >
-          {todos.map((name, index) => (
-            <div key={index} style={{ display: 'flex', alignItems: 'center' }}>
-              <Typography sx={{ margin: '8px' }} variant='h6'>
-                {index + 1}
-              </Typography>
-              <TextField
-                sx={{ flexGrow: 1, marginTop: '1rem' }}
-                label='What to do?'
-                value={name}
-                onChange={(event) => {
-                  setTodos([
-                    // immutable update
-                    ...todos.slice(0, index),
-                    event.target.value,
-                    ...todos.slice(index + 1),
-                  ])
-                }}
-              />
-              <Button
-                sx={{ margin: '8px' }}
-                size='small'
-                color='secondary'
-                onClick={() => {
-                  setTodos([
-                    // immutable delete
-                    ...todos.slice(0, index),
-                    ...todos.slice(index + 1),
-                  ])
-                }}
-              >
-                <DeleteIcon />
-              </Button>
-            </div>
+          {todos.map((todo, index) => (
+            <TodoItem
+              key={index}
+              index={index}
+              todo={todo}
+              editTodo={editTodo}
+              deleteTodo={deleteTodo}
+              toggleTodoCompleted={toggleTodoCompleted}
+            />
           ))}
           <CardActions>
             <Button
               type='button'
               color='primary'
               onClick={() => {
-                setTodos([...todos, ''])
+                setTodos([...todos, { task: '', completed: false }])
               }}
             >
               Add Todo <AddIcon />
@@ -68,6 +74,13 @@ export const TodoListForm = ({ todoList, saveTodoList }) => {
             </Button>
           </CardActions>
         </form>
+        <Snackbar
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+          open={open}
+          message='Todo list saved!'
+          autoHideDuration={3000}
+          onClose={() => setOpen(false)}
+        />
       </CardContent>
     </Card>
   )
